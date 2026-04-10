@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-baseline
+  namespace: llm-bench
+spec:
+  template:
+    spec:
+      containers:
+        - name: vllm
+          image: europe-west1-docker.pkg.dev/llm-benchmark-startup/llm-bench/vllm-openai-runai:v0.18.0 # substitute your project and repo here
+          args:
+            - $(MODEL_NAME)
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+            - --dtype
+            - $(VLLM_DTYPE)
+            - --max-model-len
+            - $(MAX_MODEL_LEN)
+            - --gpu-memory-utilization
+            - $(GPU_MEMORY_UTILIZATION)
+            - --load-format
+            - runai_streamer
+            - --model-loader-extra-config
+            - '{"concurrency":16,"distributed":true}'
+            - --generation-config
+            - vllm

@@ -1,0 +1,6 @@
+[tools]
+python = "3.13.12"
+uv = "0.10.12"
+opentofu = "1.11.5"
+kubectl = "1.35.3"
+gcloud = "561.0.0"

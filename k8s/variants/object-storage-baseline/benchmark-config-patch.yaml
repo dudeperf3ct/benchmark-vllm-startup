@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: benchmark-config
+  namespace: llm-bench
+data:
+  MODEL_NAME: /model-store
+  MODEL_REVISION: object-storage-mirror-of-c170c708c41dac9275d15a8fff4eca08d52bab71
+  GCS_MODEL_URI: gs://llm-models-benchmark/mistralai/Mistral-7B-Instruct-v0.3
+  VLLM_DTYPE: bfloat16
+  MAX_MODEL_LEN: "2048"
+  GPU_MEMORY_UTILIZATION: "0.80"

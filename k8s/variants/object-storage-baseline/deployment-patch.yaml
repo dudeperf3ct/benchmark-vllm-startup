@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-baseline
+  namespace: llm-bench
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: sync-model-from-gcs
+          image: google/cloud-sdk:slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - bash
+            - -lc
+          args:
+            - |
+              set -euo pipefail
+              mkdir -p /model-store
+              if [ -f /model-store/model.safetensors.index.json ] && [ -f /model-store/config.json ]; then
+                echo "Model store already populated; skipping GCS rsync."
+                exit 0
+              fi
+              gcloud config set storage/process_count "${GCS_RSYNC_PROCESS_COUNT}" >/dev/null
+              gcloud config set storage/thread_count "${GCS_RSYNC_THREAD_COUNT}" >/dev/null
+              echo "Starting rsync with process_count=${GCS_RSYNC_PROCESS_COUNT} thread_count=${GCS_RSYNC_THREAD_COUNT}"
+              gcloud storage rsync --recursive "${GCS_MODEL_URI}" /model-store
+          env:
+            - name: GCS_MODEL_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: benchmark-config
+                  key: GCS_MODEL_URI
+            - name: GCS_RSYNC_PROCESS_COUNT
+              value: "4"
+            - name: GCS_RSYNC_THREAD_COUNT
+              value: "8"
+          resources:
+            requests:
+              cpu: "1"
+              memory: "1Gi"
+            limits:
+              cpu: "4"
+              memory: "4Gi"
+          volumeMounts:
+            - name: model-store
+              mountPath: /model-store
+      containers:
+        - name: vllm
+          args:
+            - $(MODEL_NAME)
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+            - --dtype
+            - $(VLLM_DTYPE)
+            - --max-model-len
+            - $(MAX_MODEL_LEN)
+            - --gpu-memory-utilization
+            - $(GPU_MEMORY_UTILIZATION)
+            - --generation-config
+            - vllm
+          volumeMounts:
+            - name: model-store
+              mountPath: /model-store
+      volumes:
+        - name: model-store
+          persistentVolumeClaim:
+            claimName: vllm-model-store

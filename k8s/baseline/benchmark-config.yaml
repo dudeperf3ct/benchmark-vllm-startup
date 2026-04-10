@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: benchmark-config
+  namespace: llm-bench
+data:
+  MODEL_NAME: mistralai/Mistral-7B-Instruct-v0.3
+  MODEL_REVISION: c170c708c41dac9275d15a8fff4eca08d52bab71
+  VLLM_DTYPE: bfloat16
+  MAX_MODEL_LEN: "2048"
+  GPU_MEMORY_UTILIZATION: "0.80"

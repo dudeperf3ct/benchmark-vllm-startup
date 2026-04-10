@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-baseline
+  namespace: llm-bench
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: vllm-baseline
+  template:
+    metadata:
+      labels:
+        app: vllm-baseline
+    spec:
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:v0.18.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - vllm
+            - serve
+          args:
+            - $(MODEL_NAME)
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+            - --download-dir
+            - /root/.cache/huggingface
+            - --revision
+            - $(MODEL_REVISION)
+            - --dtype
+            - $(VLLM_DTYPE)
+            - --max-model-len
+            - $(MAX_MODEL_LEN)
+            - --gpu-memory-utilization
+            - $(GPU_MEMORY_UTILIZATION)
+            - --generation-config
+            - vllm
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: HF_TOKEN
+                  optional: true
+            - name: MODEL_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: benchmark-config
+                  key: MODEL_NAME
+            - name: MODEL_REVISION
+              valueFrom:
+                configMapKeyRef:
+                  name: benchmark-config
+                  key: MODEL_REVISION
+            - name: VLLM_DTYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: benchmark-config
+                  key: VLLM_DTYPE
+            - name: MAX_MODEL_LEN
+              valueFrom:
+                configMapKeyRef:
+                  name: benchmark-config
+                  key: MAX_MODEL_LEN
+            - name: GPU_MEMORY_UTILIZATION
+              valueFrom:
+                configMapKeyRef:
+                  name: benchmark-config
+                  key: GPU_MEMORY_UTILIZATION
+          ports:
+            - name: http
+              containerPort: 8000
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 180
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "4"
+              memory: "24Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "8"
+              memory: "26Gi"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: vllm-hf-cache
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
