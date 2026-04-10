@@ -37,6 +37,7 @@ Once the required dev tools are setup, we are all set to provision the infrastru
 > [!TIP]
 > More information on the required permissions can be found at [PREREQUISITES_AND_PERMISSIONS.md](docs/PREREQUISITES_AND_PERMISSIONS.md) document.
 
+The [end to end commands](docs/PREREQUISITES_AND_PERMISSIONS.md#8-end-to-end-command-order) section provides all the commands required to reproduce the experiments.
 
 ## Capture Transport Baseline
 
