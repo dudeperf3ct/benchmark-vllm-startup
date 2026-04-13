@@ -128,3 +128,4 @@ Running the benchmarks creates a `results` folder with the following structure.
 
 - [ ] Benchmark model loading from different disk types. Presently, we are using `pd-balanced`. Alternative speed up could be observed from `pd-ssd`.
 - [ ] [Nydus](https://github.com/containerd/nydus-snapshotter) or [eStargz](https://github.com/containerd/stargz-snapshotter) snapshotter variant of images to minimize first cold start vLLM container startup
+- [ ] Benchmark [mount cloud storage bucket as persitent volumes](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/cloud-storage-fuse-csi-driver-pv#pod-parallel-download) approach
